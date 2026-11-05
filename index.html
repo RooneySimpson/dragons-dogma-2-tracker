@@ -169,6 +169,11 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .grid.detailed .card.quest .item-stage{height:auto;min-height:0}
 .grid.detailed .card.quest .item-name{padding:8px 9px}
 
+</style><style id="timedQuestStyles">
+.quest-timed{display:inline-block;color:#ffab88;font-weight:700;font-size:10px;line-height:1.2;white-space:nowrap}
+.tagline>.quest-timed{padding:2px 5px;border:1px solid #b86e4e;border-radius:4px;background:#492b21}
+.row-meta>.quest-timed{margin-left:6px}
+
 </style></head><body>
 <!-- DD2-HUB v1: collection 3.4 + fruit counter 6 -->
 <nav id="dd2HubNav" aria-label="Playthrough tools">
@@ -258,10 +263,16 @@ function spoilerRecord(x){
  const canonical=spoilerCanonical.get(x.id);
  const out={id:x.id,category:x.category,name:mask?category+' '+String(index).padStart(3,'0')+' · hidden':x.name,type:canonical?.type||category,sourceTag:x.sourceTag,originalIndex:x.originalIndex,order:x.order,vocation:mask?'':canonical?.vocation,acquisitions:[],source:x.sourceTag==='dlc'?'Expansion':'Base game',image:x.category==='Quests'||mask?null:x.image};
  for(const key of ['strength','magick','defense','magickDefense','weight'])if(typeof x[key]==='number')out[key]=x[key];
- if(x.category==='Quests'){out.type=['Main','Side','Milestone'].includes(x.type)?x.type:'Quest';out.questInfo={objectives:'Quest details hidden — open to reveal.'}}
+ if(x.category==='Quests'){if(typeof x.timed==='boolean')out.timed=x.timed;out.type=['Main','Side','Milestone'].includes(x.type)?x.type:'Quest';out.questInfo={objectives:'Quest details hidden — open to reveal.'}}
  return out;
 }
-function finishSpoilerCard(node,x){
+function addQuestTiming(node,x){
+ if(x.category!=='Quests')return;
+ const target=node.querySelector('.row-meta')||node.querySelector('.tagline');if(!target)return;
+ for(const tag of target.querySelectorAll('.tag'))if(tag.textContent==='Quest record')tag.remove();
+ if(x.timed===true){const badge=el('span','Timed','quest-timed');badge.title='Timed quest';badge.setAttribute('aria-label','Timed quest');target.append(badge)}
+}
+function finishSpoilerCard(node,x){addQuestTiming(node,x);
  if(spoilersHidden()){
   node.classList.add('spoiler-protected');
   for(const summary of node.querySelectorAll('.summary,.row-acquisition')){summary.replaceChildren();summary.removeAttribute('title');summary.hidden=true}
