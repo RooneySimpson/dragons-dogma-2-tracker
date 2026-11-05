@@ -17,13 +17,15 @@ An unofficial, browser-based checklist and reference tracker, with a pawn/fruit 
 - Use the A–Z side index with Name A–Z sorting. With grouping enabled, letters navigate within the current group. Rings sort and index by the words after “Ring of”; full item names remain visible.
 - Find all shields under **Weapons → Shields**. Armor lists head, body, legs, cloaks and outfit sets.
 - Quest text rows show the name, type and objective without empty equipment columns. Full quest names wrap without a line limit: the row grows downward while its horizontal width stays fixed. Quest-only lists fit the available width.
-- Switch to **FIGS™ Tracker** for pawn and fig counters. Its neon button glows with animated colors and sparkles; reduced-motion settings keep it still.
+- Switch to **[FIGS™ Tracker](https://rooneysimpson.github.io/dragons-dogma-2-tracker/#figs)** for pawn and fig counters, a saved pawn roster and dated hire/reward history. Its neon button glows with animated colors and sparkles; reduced-motion settings keep it still.
+- Add a pawn once, then mark hires by date. Store the list/rank seen on that date, offered rewards and quantities, and whether you collected them. **History** opens previous records; **Same as last reward** copies the previous offer. Favorite, search, filter, archive and Undo help manage regular hires. Pawn IDs are optional unless same-named pawns need distinguishing.
+- Marking a dated hire adjusts the existing manual hire counter once. Counter adjustments/resets do not erase records. Offered/collected rewards do not add figs to storage automatically; use the separate +99 storage control after depositing them. Previous dates are editable; an empty date means no record, not a confirmed missed hire.
 - Open **Sources** for recorded references, image credits and where each source is used.
 - Find the two **Delicious in Dungeon** outfit-set entries under Armor → Outfit set, including claim instructions and Official Pawn information. Their exact inventory names, stats and equipment restrictions remain explicitly unverified.
 
 ## Your progress
 
-New visitors start with an empty checklist and zero counters. Progress is saved in this browser's local storage, separately for each visitor. It does not automatically sync between devices or browsers. Export **Backup all** regularly and use **Import backup** to restore or move your progress. Existing v1/v2/v3 collection backups remain supported.
+New visitors start with an empty checklist, empty pawn roster and zero counters. Progress is saved in this browser's local storage, separately for each visitor. It does not automatically sync between devices or browsers. Export **Backup all** regularly and use **Import backup** to restore or move your progress, including pawn profiles and daily history. Older count-only backups preserve your existing roster. Existing v1/v2/v3 collection backups remain supported.
 
 A local HTML copy and the hosted page use different browser storage. To move progress from your downloaded copy, export its backup and import that file into the hosted tracker. Clearing browser/site data can remove local progress.
 
