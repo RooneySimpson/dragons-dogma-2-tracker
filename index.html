@@ -163,8 +163,11 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 /* A real title row adds height without taking any of the picture's space. */
 .card.equipment-card .equipment-name{position:static;inset:auto;flex:none;width:100%;padding:8px 9px;background:none;text-shadow:none;border-bottom:1px solid #35493666;white-space:normal;overflow-wrap:anywhere;max-height:none}
 .card.equipment-card .item-stage{flex:none}
-/* Hidden quest details must not leave the larger detailed-card blank stage. */
-.grid.detailed .card.quest.spoiler-protected .item-stage{height:auto;min-height:70px}
+/* Quest cards have no artwork: their title area and card fit the actual text. */
+.grid.detailed .card.quest{align-self:start}
+.grid.detailed .card.quest .open{flex:none}
+.grid.detailed .card.quest .item-stage{height:auto;min-height:0}
+.grid.detailed .card.quest .item-name{padding:8px 9px}
 
 </style></head><body>
 <!-- DD2-HUB v1: collection 3.4 + fruit counter 6 -->
