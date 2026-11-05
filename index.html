@@ -249,7 +249,7 @@ function sanitizeSpoilerView(view){
 function spoilerState(x){const p=state(x);return spoilersHidden()?{...p,notes:'',npc:'',location:''}:p}
 function spoilerRecord(x){
  if(!spoilersHidden())return x;
- const p=state(x),known=!!(p.obtained||p.completed),mask=x.category==='Quests'?!known:ui.hideUncollectedNames&&!known;
+ const p=state(x),known=!!(p.obtained||p.completed),mask=x.category!=='Quests'&&ui.hideUncollectedNames&&!known;
  const index=spoilerNumber(x);
  const category={Quests:'Quest',Weapons:'Weapon',Armor:'Armor',Rings:'Ring',Skills:'Skill'}[x.category]||'Entry';
  const canonical=spoilerCanonical.get(x.id);
