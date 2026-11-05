@@ -12,6 +12,7 @@ An unofficial, browser-based checklist and reference tracker, with a pawn/fruit 
 - Click a dropdown or quantity button again to close it without changing your selection. Vocation choices scroll in short windows so the button stays accessible.
 - Switch between image cards, detailed cards and text rows using the fixed three-icon View control.
 - Equipment card names wrap in a separate row above the artwork, preserving the picture area. Detailed cards label hidden spoilers and offer an explicit per-record reveal.
+- Vocation emblems sit in the existing single-line strip below each picture. A **+N** button opens the full list when the emblems do not fit.
 - Use the A–Z side index with Name A–Z sorting. With grouping enabled, letters navigate within the current group. Rings sort and index by the words after “Ring of”; full item names remain visible.
 - Find all shields under **Weapons → Shields**. Armor lists head, body, legs, cloaks and outfit sets.
 - Quest text rows show the name, type and objective without empty equipment columns. Full quest names wrap without a line limit: the row grows downward while its horizontal width stays fixed. Quest-only lists fit the available width.
