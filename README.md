@@ -11,7 +11,7 @@ An unofficial, browser-based checklist and reference tracker, with a pawn/fruit 
 - Quests explicitly marked timed in the reference have an orange **Timed** label beside their type, including when spoilers are hidden. An absent label does not establish that a quest has no deadline.
 - Click a dropdown or quantity button again to close it without changing your selection. Vocation choices scroll in short windows so the button stays accessible.
 - Switch between image cards, detailed cards and text rows using the fixed three-icon View control.
-- Use **Columns** to choose how many cards appear across the list. Card size follows the available width; there is no separate scale slider.
+- Use **Columns** to choose the exact number of cards across the list. Cards shrink to fit that count, even in narrow windows; there is no automatic column cap or separate scale slider.
 - Equipment card names wrap in a separate row above the artwork, preserving the picture area. Detailed cards label hidden spoilers and offer an explicit per-record reveal.
 - Vocation emblems sit in the existing single-line strip below each picture. A **+N** button opens the full list when the emblems do not fit.
 - Use the A–Z side index with Name A–Z sorting. With grouping enabled, letters navigate within the current group. Rings sort and index by the words after “Ring of”; full item names remain visible.
