@@ -16,7 +16,7 @@ An unofficial, browser-based checklist and reference tracker, with a pawn/fruit 
 - Use the A–Z side index with Name A–Z sorting. With grouping enabled, letters navigate within the current group. Rings sort and index by the words after “Ring of”; full item names remain visible.
 - Find all shields under **Weapons → Shields**. Armor lists head, body, legs, cloaks and outfit sets.
 - Quest text rows show the name, type and objective without empty equipment columns. Full quest names wrap without a line limit: the row grows downward while its horizontal width stays fixed. Quest-only lists fit the available width.
-- Switch to Fruit Trafficking for pawn and fig counters.
+- Switch to **FIGS™ Tracker** for pawn and fig counters. Its neon button glows with animated colors and sparkles; reduced-motion settings keep it still.
 - Open **Sources** for recorded references, image credits and where each source is used.
 - Find the two **Delicious in Dungeon** outfit-set entries under Armor → Outfit set, including claim instructions and Official Pawn information. Their exact inventory names, stats and equipment restrictions remain explicitly unverified.
 
