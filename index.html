@@ -155,6 +155,9 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .spoiler-protected .summary[hidden],.spoiler-protected .row-acquisition[hidden]{display:none!important}
 .grid.rows .quest-row.spoiler-protected .row-open{grid-template-columns:minmax(0,1fr)}
 #hideRecord{margin-bottom:12px}
+.spoiler-card-reveal{display:none}
+.grid.detailed .spoiler-card-reveal{display:block;flex:none;width:100%;padding:7px 8px;margin:0;border:0;border-top:1px solid #506148;border-radius:0;background:transparent;color:var(--gold);font-size:11px;line-height:1.3;text-align:left;white-space:normal}
+.grid.detailed .spoiler-card-reveal:hover{background:#344735}
 
 </style><style id="cardTitleStyles">
 /* A real title row adds height without taking any of the picture's space. */
@@ -260,6 +263,7 @@ function finishSpoilerCard(node,x){
   node.classList.add('spoiler-protected');
   for(const summary of node.querySelectorAll('.summary,.row-acquisition')){summary.replaceChildren();summary.removeAttribute('title');summary.hidden=true}
   for(const tag of node.querySelectorAll('.tagline .tag'))if(['Acquisition unknown','Method unknown'].includes(tag.textContent))tag.remove();
+  if(!node.classList.contains('text-row')){const reveal=el('button','Spoilers hidden · Reveal','spoiler-card-reveal');reveal.type='button';reveal.setAttribute('aria-label','Reveal spoilers for '+x.name);reveal.onclick=()=>{spoilerRevealed.add(x.id);openDetail(x.id)};node.insertBefore(reveal,node.querySelector('.checks'))}
  }
  return node;
 }
