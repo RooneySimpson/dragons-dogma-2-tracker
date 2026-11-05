@@ -6,6 +6,7 @@ An unofficial, browser-based checklist and reference tracker, with a pawn/fruit 
 
 - Search and filter quests, weapons, armor, rings and skills.
 - Track obtained items, quantities, quest completion and personal notes.
+- Accepted, unfinished quests are amber; completed quests are green in every view.
 - Click a dropdown or quantity button again to close it without changing your selection. Vocation choices scroll in short windows so the button stays accessible.
 - Switch between image cards, detailed cards and text rows using the fixed three-icon View control.
 - Use the A–Z side index with Name A–Z sorting. With grouping enabled, letters navigate within the current group. Rings sort and index by the words after “Ring of”; full item names remain visible.
