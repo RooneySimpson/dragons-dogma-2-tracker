@@ -274,7 +274,7 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 <header id="topBanner" hidden><div class="headerline"><div><div class="eyebrow">Arisen's field reference · Version 3.4</div><h1>Dragon's Dogma 2</h1><p>Community collection & acquisition tracker</p></div><div class="actions"><button id="coverage">Research coverage</button><button id="exportJson" class="primary">Backup progress</button><button id="importTrigger">Import v1 / v2 / v3</button><button id="exportCsv">CSV</button><button id="addCustom">+ Custom entry</button><button id="newRun">New NG+ quest run</button><button id="undoRun" hidden>Undo last NG+ reset</button></div></div><div class="stats"><div class="stat"><strong id="statTotal"></strong><span>records</span></div><div class="stat"><strong id="statOwned"></strong><span>obtained / accepted</span></div><div class="stat"><strong id="statQuests"></strong><span>quests completed</span></div><div class="stat"><strong id="statMethods"></strong><span>sourced acquisition</span></div><div class="stat"><strong id="statImages"></strong><span>offline images</span></div></div><div id="migrationBanner" class="banner">Your progress is saved in this browser. Use <b>Backup all</b> to keep a copy, or <b>Import backup</b> to move existing progress here. New visitors start with an empty checklist.</div></header>
 <div class="layout"><aside class="sidebar"><h2>Find your next item</h2>
 <div><label for="progress">Collection progress</label><select id="progress"><option value="all">Any progress</option><option value="todo">Not obtained / accepted</option><option value="owned">Obtained / accepted</option><option value="done">Completed / unlocked</option><option value="questopen">Accepted, unfinished quests</option><option value="incomplete">All incomplete quests</option></select></div>
-<div><label for="era">Content</label><select id="era"><option value="all">Base + Dark Arisen</option><option value="base">Base game / original</option><option value="dlc">Dark Arisen (2026)</option></select></div>
+<div><label for="era">Content</label><select id="era"><option value="all">Base + Dark Arisen</option><option value="base">Base game / original</option><option value="dlc">Dark Arisen (2026)</option><option value="lost-rites">Lost Rites</option><option value="base-lost-rites">Base + Lost Rites</option></select></div>
 
 <div><label for="method">Acquisition method</label><select id="method"><option value="all">Any acquisition</option><option value="merchant">Merchant</option><option value="quest">Quest reward</option><option value="chest">Chest / exploration</option><option value="enemy">Enemy drop</option><option value="exchange">Exchange / tokens</option><option value="crafting">Crafting / enhancement</option><option value="gift">NPC gift</option><option value="other">Other</option><option value="unknown">No sourced method yet</option></select></div>
 <div><label for="region">Region / area</label><select id="region"></select></div><div><label for="npc">NPC / merchant / enemy</label><select id="npc"></select></div>
@@ -598,7 +598,13 @@ function maybe(known,match){return match||(!known&&ui.includeUnknown)}
 function hasMissable(m){return !unknown(m.missability)&&!/^no\b|not missable|none documented/i.test(m.missability)}
 function repeated(m){return /^(?:unlimited|repeatable|farmable)|replenish|restock|can be farmed/i.test(m.repeatability||'')&&!/not verified|unverified|unknown/i.test(m.repeatability||'')}
 function finite(m){return /one(?:-| )time|single|finite|once|one reward|one per/i.test(m.repeatability||'')}
-function matchRecord(x){const p=spoilerState(x),mm=methods(x),v=(x.vocation||'').split(',').map(s=>s.trim());if(ui.tab!=='All'&&x.category!==ui.tab)return false;if(ui.era!=='all'&&x.sourceTag!==ui.era)return false;if(ui.vocation!=='all'&&!maybe(!!x.vocation,v.includes(ui.vocation)||v.some(s=>/^all vocations$/i.test(s))))return false;if(!matchesEquipmentType(x))return false;if(ui.npc!=='all'&&![p.npc,x.questInfo?.giver,...mm.flatMap(m=>[m.npc,m.merchant,m.enemy,m.questGiver])].includes(ui.npc))return false;
+const LOST_RITES_EQUIPMENT_IDS=new Set(["r:20","weapons-seraphic-spar","weapons-hexfinger","weapons-skygill","weapons-dread-tusk","weapons-peregrine-totem","weapons-calycate-scepter","weapons-talons-of-the-magpie","weapons-iridian-sigils","weapons-blade-of-aldose","weapons-scarbrand","weapons-selenic-cane","weapons-nerodia","weapons-oscine","weapons-kinslayer","weapons-parhelion","weapons-cavicorn-bow","weapons-beckoning-delight","weapons-prickled-pomander","armor-azurequill-circlet","armor-band-of-dunscaith","armor-canopy-of-plenty","armor-crown-of-blades","armor-crown-of-the-mad-sovran","armor-geiroluls-helm","armor-glasrew-galea","armor-glory-laurel","armor-horns-of-moloch","armor-mystic-eye","armor-ophidian-diadem","armor-thorns-of-agony","armor-wyrmhorne-helm","armor-allegoric-plate","armor-catamount-jacket","armor-circumventors-burthen","armor-dragonscoil-harness","armor-eldritch-threnody","armor-kibisis-coat","armor-lex-talionis","armor-plate-of-the-mad-sovran","armor-triumphers-guerdon","armor-wyrmscale-cuirass","armor-archaic-boots","armor-fleetstride-cuisses","armor-greaves-of-the-mad-sovran","armor-insidiators-boots","armor-meteoric-cuisses","armor-padarns-wrap","armor-pyrolytic-cloth","armor-reapers-tread","armor-sanctified-boots","armor-staunch-sabatons","armor-steelsilk-sabatons","armor-wildskirl-breeches","armor-chimeric-cloak","armor-creusots-mantle","armor-crystalline-shawl","armor-dragonslayers-mantle","armor-griffin-feather-cloak","armor-phantasmic-shawl","armor-sovransguard-mantle","armor-tenebrous-stole","armor-celestial-crux","armor-memento-draco","rings-ring-of-exorcism","rings-ring-of-insulation","rings-ring-of-projection"]);
+function matchesContent(x){
+ if(ui.era==='lost-rites')return LOST_RITES_EQUIPMENT_IDS.has(x.id);
+ if(ui.era==='base-lost-rites')return x.sourceTag==='base'||LOST_RITES_EQUIPMENT_IDS.has(x.id);
+ return ui.era==='all'||x.sourceTag===ui.era;
+}
+function matchRecord(x){const p=spoilerState(x),mm=methods(x),v=(x.vocation||'').split(',').map(s=>s.trim());if(ui.tab!=='All'&&x.category!==ui.tab)return false;if(!matchesContent(x))return false;if(ui.vocation!=='all'&&!maybe(!!x.vocation,v.includes(ui.vocation)||v.some(s=>/^all vocations$/i.test(s))))return false;if(!matchesEquipmentType(x))return false;if(ui.npc!=='all'&&![p.npc,x.questInfo?.giver,...mm.flatMap(m=>[m.npc,m.merchant,m.enemy,m.questGiver])].includes(ui.npc))return false;
 if(ui.status==='todo'&&p.obtained)return false;if(ui.status==='owned'&&!p.obtained)return false;if(ui.status==='done'&&!(x.category==='Quests'?p.completed:p.obtained))return false;if(ui.status==='questopen'&&(x.category!=='Quests'||!p.obtained||p.completed))return false;if(ui.status==='incomplete'&&(x.category!=='Quests'||p.completed))return false;
 if(ui.method==='unknown'&&mm.length)return false;if(!['all','unknown'].includes(ui.method)&&!maybe(mm.length>0,mm.some(m=>m.type===ui.method)))return false;if(ui.region!=='all'&&!maybe(mm.some(m=>!unknown(m.region)),mm.some(m=>m.region===ui.region)))return false;
 if(ui.method!=='all'&&ui.region!=='all'&&mm.length&&ui.method!=='unknown'&&!mm.some(m=>m.type===ui.method&&(m.region===ui.region||(!m.region&&ui.includeUnknown))))return false;
@@ -849,7 +855,7 @@ window.addEventListener('pagehide',()=>{clearTimeout(scrollSaveTimer);if(!restor
   }
   window.dd2FruitBridge = { read: readCounters, validateBackup, write: writeCounters, refresh: refreshCounters };
 
-  function selectTool(tool, remember = true) {
+  function selectTool(tool) {
     const showFruit = tool === 'fruit';
     if (showFruit) {
       window.dd2CollectionHub.closePopovers();
@@ -868,8 +874,11 @@ window.addEventListener('pagehide',()=>{clearTimeout(scrollSaveTimer);if(!restor
       frame.srcdoc = JSON.parse(document.getElementById('dd2FruitDocument').textContent);
     }
     if (fruitLoaded) frame.contentWindow?.dd2FruitEffects?.setActive(showFruit);
-    if (remember) {
-      try { localStorage.setItem(viewKey, showFruit ? 'fruit' : 'collection'); } catch (_) {}
+    try { localStorage.setItem(viewKey, showFruit ? 'fruit' : 'collection'); } catch (_) {}
+    if (!showFruit && location.hash === '#figs') {
+      const url = new URL(location.href);
+      url.hash = '';
+      history.replaceState(history.state, '', url);
     }
   }
   tabs.forEach((tab, index) => {
@@ -888,7 +897,7 @@ window.addEventListener('pagehide',()=>{clearTimeout(scrollSaveTimer);if(!restor
   let initial = 'collection';
   try { if (localStorage.getItem(viewKey) === 'fruit') initial = 'fruit'; } catch (_) {}
   if (location.hash === '#figs') initial = 'fruit';
-  selectTool(initial, false);
+  selectTool(initial);
 })();
 
 </script>
