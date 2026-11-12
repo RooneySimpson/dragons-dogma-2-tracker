@@ -127,17 +127,17 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .list-region{display:flex;flex:1;min-height:0;min-width:0;gap:7px;overflow:hidden}
 .list-region>.list-scroll{min-width:0;flex:1}
 .alphabet-index{display:flex;flex:0 0 calc(var(--alphabet-columns,1) * 21px + 11px);min-height:0;flex-direction:column;align-self:stretch;border-left:1px solid var(--border);padding-left:5px;gap:4px}
-.alphabet-current{flex:none;text-align:center;font:700 23px Georgia,serif;color:var(--gold);padding:3px 0;border-bottom:1px solid var(--border)}
+.alphabet-current{flex:none;text-align:center;font:700 23px Georgia,serif;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border)}
 .alphabet-group{flex:none;text-align:center;font-size:9px;line-height:1.2;color:var(--muted);max-height:34px;overflow:hidden;overflow-wrap:anywhere}
 .alphabet-letters{position:relative;display:grid;flex:1;min-height:0;grid-auto-flow:column;grid-template-rows:repeat(var(--alphabet-rows,27),minmax(18px,1fr));grid-template-columns:repeat(var(--alphabet-columns,1),minmax(0,1fr));overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;overscroll-behavior:contain;gap:1px}
 .alphabet-letter{border:0;background:transparent;color:var(--text);font-size:11px;font-weight:600;line-height:1;padding:2px 0;min-height:18px;width:100%;border-radius:4px;text-align:center}
 .alphabet-letter:disabled{color:#a3aaa5;opacity:1;cursor:default}
 .alphabet-letter:enabled{position:relative;padding-left:6px}
 .alphabet-letter:enabled::before{content:"";position:absolute;left:2px;top:50%;width:4px;height:1px;background:currentColor;transform:translateY(-50%)}
-.alphabet-letter[aria-current]{background:var(--gold);color:#162119}
-.alphabet-letter:not(:disabled):hover{background:#3c503c;color:var(--text)}
+.alphabet-letter[aria-pressed=true]{background:var(--gold);color:#162119}
+.alphabet-letter:not(:disabled):not([aria-pressed=true]):hover{background:#3c503c;color:var(--text)}
 .alphabet-letter:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
-#list article.alphabet-match,.alphabet-letter[aria-pressed=true]{outline:2px solid #f4ca72;outline-offset:-2px}
+#list article.alphabet-match{outline:2px solid #f4ca72;outline-offset:-2px}
 @media(max-width:620px){.list-region{gap:4px}.alphabet-index{padding-left:3px}.alphabet-current{font-size:21px}}
 
 </style><style id="trackerSourcesStyles">
@@ -630,7 +630,7 @@ function finishProgressExits() {
   const remains = card => !progressExits.has(card.dataset.id);
   targetId = (cards.slice(index).find(remains) || cards.slice(0,index).findLast(remains))?.dataset.id;
  }
- render();
+ render(progressExits.size>0);
  if (restoreFocus) {
   const card = targetId && $('list').querySelector('article[data-id="' + CSS.escape(targetId) + '"]');
   const next = card?.querySelector('[data-progress-key="' + key + '"]')
@@ -798,34 +798,63 @@ function indexLetter(name){const first=String(name||'').normalize('NFKD').replac
 function initializeAlphabetIndex(){
  const scroll=$('list').parentElement,region=el('div',null,'list-region'),rail=el('nav',null,'alphabet-index');
  region.id='listRegion';scroll.before(region);region.append(scroll,rail);rail.id='alphabetIndex';rail.hidden=true;rail.setAttribute('aria-label','Alphabetical list navigation');
- const current=el('div',null,'alphabet-current');current.id='alphabetCurrent';current.setAttribute('aria-label','Current letter');
+ const current=el('div',null,'alphabet-current');current.id='alphabetCurrent';current.setAttribute('aria-label','Letter at scroll position');
  const group=el('div',null,'alphabet-group');group.id='alphabetGroup';
  const letters=el('div',null,'alphabet-letters');letters.id='alphabetLetters';
  for(const letter of ALPHABET){const button=el('button',letter,'alphabet-letter');button.type='button';button.dataset.letter=letter;button.setAttribute('aria-label','Jump to '+(letter==='#'?'numbers and other names':letter));button.setAttribute('aria-controls','list');button.setAttribute('aria-pressed','false');button.onclick=()=>{
+   if(selectedAlphabetLetter===letter){
+    selectedAlphabetLetter=null;
+    syncAlphabetHighlight();
+    updateAlphabetPosition();
+    return;
+   }
    const entry=alphabetEntries.find(x=>x.group===alphabetGroup&&x.letter===letter);if(!entry)return;
    selectedAlphabetLetter=letter;
    syncAlphabetHighlight();
-   const top=entry.node.getBoundingClientRect().top-scroll.getBoundingClientRect().top+scroll.scrollTop-scroll.clientTop;
-   scroll.scrollTo({top:Math.max(0,top),behavior:'instant'});updateAlphabetPosition();
+   jumpToAlphabetEntry(entry);
  };letters.append(button)}
  rail.append(current,group,letters);
  scroll.addEventListener('scroll',()=>{if(alphabetFrame)return;alphabetFrame=requestAnimationFrame(()=>{alphabetFrame=0;updateAlphabetPosition()})},{passive:true});
  new ResizeObserver(scheduleAlphabetMeasurements).observe(scroll);
 }
+function jumpToAlphabetEntry(entry){
+ const scroll=$('list').parentElement;
+ const top=entry.node.getBoundingClientRect().top-scroll.getBoundingClientRect().top+scroll.scrollTop-scroll.clientTop;
+ scroll.scrollTo({top:Math.max(0,top),behavior:'instant'});
+ updateAlphabetPosition();
+}
 function syncAlphabetHighlight(){
  for(const {node,letter} of alphabetEntries)node.classList.toggle('alphabet-match',letter===selectedAlphabetLetter);
  for(const button of $('alphabetLetters').children)button.setAttribute('aria-pressed',String(button.dataset.letter===selectedAlphabetLetter));
 }
-function syncAlphabetIndex(records){
+function nearestAlphabetEntry(letter,group){
+ const inGroup=alphabetEntries.filter(entry=>entry.group===group);
+ const candidates=inGroup.length?inGroup:alphabetEntries;
+ const index=ALPHABET.indexOf(letter);
+ for(let distance=1;distance<ALPHABET.length;distance++){
+  const next=candidates.find(entry=>entry.letter===ALPHABET[index+distance]);
+  if(next)return next;
+  const previous=candidates.find(entry=>entry.letter===ALPHABET[index-distance]);
+  if(previous)return previous;
+ }
+ return null;
+}
+function syncAlphabetIndex(records,advanceSelection){
  const rail=$('alphabetIndex');rail.hidden=ui.sort!=='az'||!records.length;
+ const previousGroup=alphabetGroup;
  alphabetEntries=[];alphabetPositions=[];alphabetGroup=null;
- if(ui.sort!=='az'&&selectedAlphabetLetter!==null){
+ if(rail.hidden){
   selectedAlphabetLetter=null;
   syncAlphabetHighlight();
+  return;
  }
- if(rail.hidden)return;
  const nodes=[...$('list').children].filter(node=>node.matches('article.card'));
  alphabetEntries=records.map((record,i)=>{const letter=indexLetter(alphabeticalName(record)),group=ui.group==='none'?'':String(groupVal(record));nodes[i].dataset.indexLetter=letter;return {node:nodes[i],letter,group,category:record.category}});
+ if(selectedAlphabetLetter&&!alphabetEntries.some(entry=>entry.letter===selectedAlphabetLetter)){
+  const next=advanceSelection?nearestAlphabetEntry(selectedAlphabetLetter,previousGroup):null;
+  selectedAlphabetLetter=next?.letter??null;
+  if(next)jumpToAlphabetEntry(next);
+ }
  syncAlphabetHighlight();
  scheduleAlphabetMeasurements();
 }
@@ -851,8 +880,13 @@ function updateAlphabetPosition(){
  $('alphabetGroup').textContent=entry.group;$('alphabetGroup').hidden=!entry.group;$('alphabetGroup').title=entry.group?'Index within '+entry.group:'';
  const available=new Set(alphabetEntries.filter(x=>x.group===entry.group).map(x=>x.letter));
  rail.setAttribute('aria-label',entry.group?'Alphabetical navigation within '+entry.group:'Alphabetical list navigation');
- for(const button of $('alphabetLetters').children){button.disabled=!available.has(button.dataset.letter);button.title=(button.disabled?'No names starting with ':'Jump to ')+button.dataset.letter+(entry.group?' in '+entry.group:'');if(button.dataset.letter===entry.letter)button.setAttribute('aria-current','location');else button.removeAttribute('aria-current')}
- const active=$('alphabetLetters').querySelector('[aria-current]'),letters=$('alphabetLetters');
+ for(const button of $('alphabetLetters').children){
+  const letter=button.dataset.letter,selected=letter===selectedAlphabetLetter;
+  button.disabled=!selected&&!available.has(letter);
+  button.title=selected?'Clear '+letter+' highlight':(button.disabled?'No names starting with ':'Jump to ')+letter+(entry.group?' in '+entry.group:'');
+  if(letter===entry.letter)button.setAttribute('aria-current','location');else button.removeAttribute('aria-current');
+ }
+ const letters=$('alphabetLetters'),active=letters.querySelector('[aria-pressed=true]')||letters.querySelector('[aria-current]');
  if(active){const start=active.offsetTop,end=start+active.offsetHeight;if(start<letters.scrollTop)letters.scrollTop=start;else if(end>letters.scrollTop+letters.clientHeight)letters.scrollTop=end-letters.clientHeight}
 }
 
@@ -939,8 +973,8 @@ function syncViewSwitcher(){
  $('columns').closest('.toolbar-columns').classList.toggle('card-controls-disabled',ui.mode==='rows');
 }
 
-function draw(){cancelProgressExits();resetCardVocations();sanitizeSpoilerView(ui);const a=filtered();$('shown').textContent=a.length.toLocaleString()+' results';$('list').replaceChildren();let last=null;for(const x of a){const g=groupVal(x);if(ui.group!=='none'&&g!==last){last=g;$('list').append(el('div',g,'groupheading'))}$('list').append(ui.mode==='rows'?textRow(x):card(x))}if(!a.length)$('list').append(el('div','No matches. Clear filters or include unknown metadata to see records with research gaps.','empty'));applyView();syncAlphabetIndex(a);saveView()}
-function render(){updateTypeOptions();const a=items();$('statTotal').textContent=a.length.toLocaleString();$('statOwned').textContent=a.filter(x=>state(x).obtained).length;$('statQuests').textContent=a.filter(x=>x.category==='Quests'&&state(x).completed).length+' / '+a.filter(x=>x.category==='Quests').length;$('statMethods').textContent=COVER.totals.sourcedAcquisition.count;$('statImages').textContent=COVER.totals.images.count;$('undoRun').hidden=!store.runHistory?.length;$('tabs').replaceChildren();for(const cat of CATS){const b=el('button',cat,'tab');b.setAttribute('role','tab');b.setAttribute('aria-selected',String(ui.tab===cat));b.append(el('span',cat==='All'?a.length:a.filter(x=>x.category===cat).length,'count'));b.onclick=()=>{ui.tab=cat;render()};$('tabs').append(b)}draw()}
+function draw(advanceAlphabet=false){cancelProgressExits();resetCardVocations();sanitizeSpoilerView(ui);const a=filtered();$('shown').textContent=a.length.toLocaleString()+' results';$('list').replaceChildren();let last=null;for(const x of a){const g=groupVal(x);if(ui.group!=='none'&&g!==last){last=g;$('list').append(el('div',g,'groupheading'))}$('list').append(ui.mode==='rows'?textRow(x):card(x))}if(!a.length)$('list').append(el('div','No matches. Clear filters or include unknown metadata to see records with research gaps.','empty'));applyView();syncAlphabetIndex(a,advanceAlphabet);saveView()}
+function render(advanceAlphabet=false){updateTypeOptions();const a=items();$('statTotal').textContent=a.length.toLocaleString();$('statOwned').textContent=a.filter(x=>state(x).obtained).length;$('statQuests').textContent=a.filter(x=>x.category==='Quests'&&state(x).completed).length+' / '+a.filter(x=>x.category==='Quests').length;$('statMethods').textContent=COVER.totals.sourcedAcquisition.count;$('statImages').textContent=COVER.totals.images.count;$('undoRun').hidden=!store.runHistory?.length;$('tabs').replaceChildren();for(const cat of CATS){const b=el('button',cat,'tab');b.setAttribute('role','tab');b.setAttribute('aria-selected',String(ui.tab===cat));b.append(el('span',cat==='All'?a.length:a.filter(x=>x.category===cat).length,'count'));b.onclick=()=>{ui.tab=cat;render()};$('tabs').append(b)}draw(advanceAlphabet)}
 function applyView(){scheduleAlphabetMeasurements();const width=$('list').clientWidth,eff=ui.columns;document.documentElement.style.setProperty('--columns',eff);$('list').className='grid '+ui.mode+(ui.mode==='rows'&&(ui.tab==='Quests'||($('list').querySelector('.quest-row')&&!$('list').querySelector('article.card:not(.quest-row)')))?' quest-results':'');syncViewSwitcher();$('columns').disabled=ui.mode==='rows';const cardWidth=Math.max(1,(width-10*(eff-1))/eff);document.documentElement.style.setProperty('--image-height',Math.round(cardWidth*1.08)+'px');syncVocationTrigger()}
 function heading(t,root){root.append(el('h3',t,'section'))}
 function facts(data,root){let dl=el('dl',null,'facts');for(const [k,v] of Object.entries(data)){dl.append(el('dt',k),el('dd',v===undefined||v===null||v===''?'Unknown / not researched':typeof v==='object'?JSON.stringify(v):v))}root.append(dl)}
