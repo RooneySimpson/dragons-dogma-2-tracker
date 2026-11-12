@@ -549,12 +549,82 @@ function physical(x){return ['Weapons','Armor','Rings'].includes(x.category)}
 function state(x){const p={...(BASE[x.id]||{obtained:!!x.obtained,completed:!!x.completed,notes:x.notes||'',npc:x.npc||'',location:x.location||''}),...(store.progress[x.id]||{})};if(physical(x))p.quantity=p.obtained?(Number.isSafeInteger(p.quantity)&&p.quantity>0?Math.min(999999,p.quantity):1):0;return p}
 function record(x){const p=state(x);return {...x,...(validObj(p.edits)?p.edits:{}),acquisitions:Array.isArray(x.acquisitions)?x.acquisitions:[],reference:x}}
 function methods(x){return x.acquisitions||[]}
-function mark(id,key,val){const x=items().find(x=>x.id===id);if(!x)return;const p=state(x);p[key]=val;if(key==='completed'&&val)p.obtained=true;if(key==='obtained'&&!val)p.completed=false;if(physical(x)&&key==='obtained')p.quantity=val?Math.max(1,p.quantity||0):0;store.progress[id]=p;persist();render();syncDetailProgress(id);if(quantityId===id)syncQuantityPopover()}
-function box(x,key){const p=state(x),label=el('label'),input=el('input');input.type='checkbox';input.checked=!!p[key];input.setAttribute('aria-label',(key==='completed'?'Completed: ':x.category==='Quests'?'Accepted: ':x.category==='Skills'?'Unlocked: ':'Obtained: ')+x.name);input.onchange=()=>mark(x.id,key,input.checked);label.append(input,el('span',key==='completed'?'Completed':x.category==='Quests'?'Accepted':x.category==='Skills'?'Unlocked':'Obtained'));return label}
+const progressExits = new Map();
+const progressHoldMs = 360;
+const progressExitMs = 190;
+
+function cancelProgressExits() {
+ for (const animation of progressExits.values()) animation.cancel();
+ progressExits.clear();
+}
+
+function renderProgressChange(record, confirmed) {
+ const progress = state(record);
+ const card = $('list').querySelector('article[data-id="' + CSS.escape(record.id) + '"]');
+ const leavesFilter = ui.collectionProgress.length
+  && !ui.collectionProgress.includes(progressStatus(record, progress));
+ const departing = progressExits.get(record.id);
+
+ // An unchecked item may need its name and artwork masked immediately.
+ if (!confirmed && spoilersHidden() && ui.hideUncollectedNames && !progress.obtained) {
+  render();
+  return;
+ }
+ if (departing && !leavesFilter) {
+  departing.cancel();
+  progressExits.delete(record.id);
+ }
+ if (card && confirmed && leavesFilter && !departing) {
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const frames = reducedMotion ? [{opacity:1}, {opacity:1}] : [
+   {transform:'scale(1)', opacity:1},
+   {transform:'scale(1, .06)', opacity:1, offset:.65},
+   {transform:'scale(.02, .02)', opacity:0}
+  ];
+  const animation = card.animate(frames, {
+   delay:progressHoldMs, duration:reducedMotion ? 0 : progressExitMs,
+   easing:'ease-in', fill:'forwards'
+  });
+  progressExits.set(record.id, animation);
+  animation.finished.then(() => {
+   if (progressExits.get(record.id) === animation) finishProgressExits();
+  }, () => {});
+ }
+ if (card) {
+  for (const input of card.querySelectorAll('[data-progress-key]')) {
+   input.checked = !!progress[input.dataset.progressKey];
+  }
+ }
+ finishProgressExits();
+}
+
+function finishProgressExits() {
+ if ([...progressExits.values()].some(animation => animation.playState !== 'finished')) return;
+ const input = document.activeElement?.closest('#list [data-progress-key]');
+ const key = input?.dataset.progressKey;
+ const restoreFocus = input && progressExits.size;
+ let targetId;
+ if (restoreFocus) {
+  const cards = Array.from($('list').querySelectorAll('article[data-id]'));
+  const index = cards.indexOf(input.closest('article'));
+  const remains = card => !progressExits.has(card.dataset.id);
+  targetId = (cards.slice(index).find(remains) || cards.slice(0,index).findLast(remains))?.dataset.id;
+ }
+ render();
+ if (restoreFocus) {
+  const card = targetId && $('list').querySelector('article[data-id="' + CSS.escape(targetId) + '"]');
+  const next = card?.querySelector('[data-progress-key="' + key + '"]')
+   || card?.querySelector('[data-progress-key]') || $('progressTrigger');
+  next.focus({preventScroll:true});
+ }
+}
+
+function mark(id,key,val){const x=items().find(x=>x.id===id);if(!x)return;const p=state(x);p[key]=val;if(key==='completed'&&val)p.obtained=true;if(key==='obtained'&&!val)p.completed=false;if(physical(x)&&key==='obtained')p.quantity=val?Math.max(1,p.quantity||0):0;store.progress[id]=p;persist();renderProgressChange(x,val);syncDetailProgress(id);if(quantityId===id)syncQuantityPopover()}
+function box(x,key){const p=state(x),label=el('label'),input=el('input');input.type='checkbox';input.checked=!!p[key];input.dataset.progressKey=key;input.setAttribute('aria-label',(key==='completed'?'Completed: ':x.category==='Quests'?'Accepted: ':x.category==='Skills'?'Unlocked: ':'Obtained: ')+x.name);input.onchange=()=>mark(x.id,key,input.checked);label.append(input,el('span',key==='completed'?'Completed':x.category==='Quests'?'Accepted':x.category==='Skills'?'Unlocked':'Obtained'));return label}
 function vocationIcons(x){const wrap=el('span',null,'vocation-icons');wrap.setAttribute('aria-label','Eligible vocations');let names=String(x.vocation||'').split(/[,/]/).map(s=>s.trim()).filter(Boolean);if(names.some(s=>/^all vocations$/i.test(s)))names=Object.keys(VOCATIONS);for(const name of [...new Set(names)]){const data=VOCATIONS[name];const tag=el('span',null,'vocation-symbol');tag.title=name;if(data?.dataUrl){const image=el('img');image.src=data.dataUrl;image.alt=name;image.className='vocation-emblem';image.decoding='async';image.onerror=()=>{tag.replaceChildren(el('span','?'));tag.setAttribute('aria-label',name)};tag.append(image)}else{tag.append(el('span','?'));tag.setAttribute('aria-label',name)}wrap.append(tag)}return wrap}
 function quantityButton(x){const p=state(x),b=el('button','× '+p.quantity,'quantity-trigger'+(p.quantity?' has-copies':''));b.type='button';b.dataset.quantityId=x.id;b.setAttribute('aria-label','Quantity for '+x.name+': '+p.quantity);b.setAttribute('aria-haspopup','dialog');b.setAttribute('aria-controls','quantityPopover');b.setAttribute('aria-expanded',String(quantityId===x.id));b.setAttribute('popovertarget','quantityPopover');b.onclick=e=>{e.preventDefault();e.stopPropagation();openQuantity(x.id,b)};return b}
 function syncDetailProgress(id){if(currentId!==id||!$('detail').open)return;const raw=items().find(x=>x.id===id),root=$('detailBody').querySelector('.detailintro .checks');if(!raw||!root)return;const x=spoilersHidden()&&!spoilerRevealed.has(id)?spoilerRecord(record(raw)):record(raw);root.replaceChildren(box(x,'obtained'));if(x.category==='Quests')root.append(box(x,'completed'));if(physical(x))root.append(quantityButton(x))}
-function setQuantity(id,value){const raw=items().find(x=>x.id===id);if(!raw||!physical(raw))return;if(!Number.isSafeInteger(value)||value<0||value>999999){toast('Enter a whole quantity from 0 to 999999.',true);syncQuantityPopover();return}const p=state(raw);p.quantity=value;p.obtained=value>0;if(!p.obtained)p.completed=false;store.progress[id]=p;persist();render();syncDetailProgress(id);syncQuantityPopover()}
+function setQuantity(id,value){const raw=items().find(x=>x.id===id);if(!raw||!physical(raw))return;if(!Number.isSafeInteger(value)||value<0||value>999999){toast('Enter a whole quantity from 0 to 999999.',true);syncQuantityPopover();return}const p=state(raw);p.quantity=value;p.obtained=value>0;if(!p.obtained)p.completed=false;store.progress[id]=p;persist();renderProgressChange(raw,p.obtained);syncDetailProgress(id);syncQuantityPopover()}
 function syncQuantityPopover(){if(!quantityId)return;const raw=items().find(x=>x.id===quantityId);if(!raw)return closeQuantity(false);const x=spoilerRecord(record(raw)),n=state(raw).quantity;$('quantityTitle').textContent=x.name;$('quantityValue').value=n;$('quantityMinus').disabled=n===0;$('quantityPlus').disabled=n===999999;for(const button of document.querySelectorAll('.quantity-trigger'))button.setAttribute('aria-expanded',String(button.dataset.quantityId===quantityId))}
 function closeQuantity(restoreFocus=false){const id=quantityId;quantityId=null;const pop=$('quantityPopover');if(pop.matches(':popover-open'))pop.hidePopover();for(const b of document.querySelectorAll('.quantity-trigger'))b.setAttribute('aria-expanded','false');if(restoreFocus&&id){const root=$('detail').open?$('detail'):document;const b=Array.from(root.querySelectorAll('.quantity-trigger')).find(b=>b.dataset.quantityId===id);(b||quantityInvoker)?.focus?.({preventScroll:true})}}
 function openQuantity(id,button){closeVocationMenu(false);const pop=$('quantityPopover');if(quantityId===id&&pop.matches(':popover-open'))return closeQuantity(true);closeQuantity(false);quantityId=id;quantityInvoker=button;const parent=button.closest('dialog')||document.body;if(pop.parentElement!==parent)parent.append(pop);syncQuantityPopover();pop.showPopover();positionDropdown(pop,button,8);$('quantityValue').focus({preventScroll:true});$('quantityValue').select()}
@@ -849,7 +919,7 @@ function syncViewSwitcher(){
  $('columns').closest('.toolbar-columns').classList.toggle('card-controls-disabled',ui.mode==='rows');
 }
 
-function draw(){resetCardVocations();sanitizeSpoilerView(ui);const a=filtered();$('shown').textContent=a.length.toLocaleString()+' results';$('list').replaceChildren();let last=null;for(const x of a){const g=groupVal(x);if(ui.group!=='none'&&g!==last){last=g;$('list').append(el('div',g,'groupheading'))}$('list').append(ui.mode==='rows'?textRow(x):card(x))}if(!a.length)$('list').append(el('div','No matches. Clear filters or include unknown metadata to see records with research gaps.','empty'));applyView();syncAlphabetIndex(a);saveView()}
+function draw(){cancelProgressExits();resetCardVocations();sanitizeSpoilerView(ui);const a=filtered();$('shown').textContent=a.length.toLocaleString()+' results';$('list').replaceChildren();let last=null;for(const x of a){const g=groupVal(x);if(ui.group!=='none'&&g!==last){last=g;$('list').append(el('div',g,'groupheading'))}$('list').append(ui.mode==='rows'?textRow(x):card(x))}if(!a.length)$('list').append(el('div','No matches. Clear filters or include unknown metadata to see records with research gaps.','empty'));applyView();syncAlphabetIndex(a);saveView()}
 function render(){updateTypeOptions();const a=items();$('statTotal').textContent=a.length.toLocaleString();$('statOwned').textContent=a.filter(x=>state(x).obtained).length;$('statQuests').textContent=a.filter(x=>x.category==='Quests'&&state(x).completed).length+' / '+a.filter(x=>x.category==='Quests').length;$('statMethods').textContent=COVER.totals.sourcedAcquisition.count;$('statImages').textContent=COVER.totals.images.count;$('undoRun').hidden=!store.runHistory?.length;$('tabs').replaceChildren();for(const cat of CATS){const b=el('button',cat,'tab');b.setAttribute('role','tab');b.setAttribute('aria-selected',String(ui.tab===cat));b.append(el('span',cat==='All'?a.length:a.filter(x=>x.category===cat).length,'count'));b.onclick=()=>{ui.tab=cat;render()};$('tabs').append(b)}draw()}
 function applyView(){scheduleAlphabetMeasurements();const width=$('list').clientWidth,eff=ui.columns;document.documentElement.style.setProperty('--columns',eff);$('list').className='grid '+ui.mode+(ui.mode==='rows'&&(ui.tab==='Quests'||($('list').querySelector('.quest-row')&&!$('list').querySelector('article.card:not(.quest-row)')))?' quest-results':'');syncViewSwitcher();$('columns').disabled=ui.mode==='rows';const cardWidth=Math.max(1,(width-10*(eff-1))/eff);document.documentElement.style.setProperty('--image-height',Math.round(cardWidth*1.08)+'px');syncVocationTrigger()}
 function heading(t,root){root.append(el('h3',t,'section'))}
