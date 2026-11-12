@@ -284,6 +284,15 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 <style id="resultGroupStyles">
 .group-count{color:var(--muted);font-size:.82em;white-space:nowrap;font-variant-numeric:tabular-nums}
 </style>
+<style id="checklistExportStyles">
+.checklist-export{display:grid;gap:12px}
+.checklist-export fieldset{margin:0;padding:6px 10px;border:1px solid var(--border);border-radius:6px}
+.checklist-export legend{padding:0 4px}
+.checklist-export-options,.checklist-export-actions{display:flex;align-items:center;flex-wrap:wrap;gap:6px 14px}
+.checklist-export label{display:inline-flex;align-items:center;gap:5px}
+.checklist-export input{accent-color:#8fbe91}
+.checklist-export-actions [role=status]{color:var(--muted)}
+</style>
 </head><body>
 <!-- DD2-HUB v1: collection 3.4 + fruit counter 6 -->
 <nav id="dd2HubNav" aria-label="Playthrough tools">
@@ -308,7 +317,7 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 <div><label for="availability">Availability</label><select id="availability"><option value="all">Any availability</option><option value="missable">Has a missable route</option><option value="notmissable">Confirmed not globally missable</option><option value="repeatable">Has repeatable route</option><option value="finite">Has finite route</option><option value="unique">Confirmed globally unique</option><option value="unknown">Global availability unknown</option></select></div>
 <div><label for="confidence">Evidence</label><select id="confidence"><option value="all">Any evidence</option><option value="verified">Corroborated acquisition</option><option value="well-supported">Well-supported acquisition</option><option value="community-reported">Community-reported route</option><option value="unverified">Unverified claim</option><option value="unknown">No sourced acquisition</option><option value="image">With offline image</option><option value="noimage">Without offline image</option></select></div>
 <label class="checkline"><input id="includeUnknown" type="checkbox" checked><span>Include unknown metadata when filtering vocation, type, region or acquisition. Unknown matches are labeled.</span></label><button id="clearFilters" style="margin-top:15px">Clear filters</button></aside>
-<main><div class="toolbar"><div class="row"><input id="search" class="search" type="search" placeholder="Search items, merchants, locations, quests or notes…" aria-label="Search database"><button id="exportChecklist" type="button" title="Download every collection entry and its status">Export checklist</button><button id="help">About / migration</button><button id="headerToggle" aria-controls="topBanner" aria-expanded="false">Show banner ▾</button></div><div class="categorybar"><nav id="tabs" class="tabs" aria-label="Categories"></nav><div class="context-type-filter"><label id="contextTypeLabel" for="type">Weapon type</label><select id="type" aria-label="Weapon type"></select></div><div class="vocation-picker"><button id="vocationTrigger" type="button" role="combobox" aria-label="Vocation" aria-controls="vocationMenu" aria-haspopup="listbox" aria-expanded="false"></button><select id="vocation" hidden aria-hidden="true" tabindex="-1"></select></div></div><div class="row viewbar"><div class="row"><div id="viewSwitcher" class="view-switcher" role="toolbar" aria-label="View style"><button type="button" data-mode="compact" aria-label="Image cards" title="Image cards" aria-controls="list" aria-pressed="false"><svg viewBox="0 0 24 26" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button><button type="button" data-mode="detailed" aria-label="Detailed cards" title="Detailed cards" aria-controls="list" aria-pressed="false"><svg viewBox="0 0 24 26" aria-hidden="true" focusable="false"><rect x="2" y="2" width="8" height="6" rx="1"/><rect x="14" y="2" width="8" height="6" rx="1"/><path d="M2 11h8m4 0h8"/><rect x="2" y="15" width="8" height="5" rx="1"/><rect x="14" y="15" width="8" height="5" rx="1"/><path d="M2 23h8m4 0h8"/></svg></button><button type="button" data-mode="rows" aria-label="Text rows" title="Text rows" aria-controls="list" aria-pressed="false"><svg viewBox="0 0 24 26" aria-hidden="true" focusable="false"><path d="M8 5h13M8 12h13M8 19h13M3 5h1M3 12h1M3 19h1"/></svg></button></div><select id="mode" hidden aria-hidden="true" tabindex="-1"><option value="compact">Image cards</option><option value="detailed">Detailed cards</option><option value="rows">Text rows</option></select><div class="toolbar-control-pair toolbar-columns"><label for="columns">Columns</label><select id="columns"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div></div><div class="row"><div class="toolbar-control-pair toolbar-sort"><label for="sort">Sort</label><select id="sort" aria-label="Sort"><option value="original">Original order</option><option value="az">Name A–Z</option><option value="za">Name Z–A</option><option value="progress">Uncollected first</option><option value="vocation">Vocation</option><option value="location">Location</option><option value="character">Character</option><option value="era">Content</option></select></div><div class="toolbar-control-pair toolbar-group"><label for="group">Group</label><select id="group" aria-label="Group"><option value="none">No grouping</option><option value="category">Group: category</option><option value="type">Group: type</option><option value="vocation">Group: vocation</option><option value="character">Group: character</option><option value="era">Group: content</option></select></div></div></div></div><div id="shown" class="results" aria-live="polite"></div><div class="list-scroll" tabindex="0" aria-label="Matching records"><div id="list" class="grid compact"></div><footer>Reference checked 5 November 2026 · Game artwork © CAPCOM · Research confidence applies to individual methods. Unknown does not mean unobtainable. No ads, analytics, accounts, external scripts or online image dependencies.</footer></div></main></div>
+<main><div class="toolbar"><div class="row"><input id="search" class="search" type="search" placeholder="Search items, merchants, locations, quests or notes…" aria-label="Search database"><button id="exportChecklist" type="button">Export checklist</button><button id="help">About / migration</button><button id="headerToggle" aria-controls="topBanner" aria-expanded="false">Show banner ▾</button></div><div class="categorybar"><nav id="tabs" class="tabs" aria-label="Categories"></nav><div class="context-type-filter"><label id="contextTypeLabel" for="type">Weapon type</label><select id="type" aria-label="Weapon type"></select></div><div class="vocation-picker"><button id="vocationTrigger" type="button" role="combobox" aria-label="Vocation" aria-controls="vocationMenu" aria-haspopup="listbox" aria-expanded="false"></button><select id="vocation" hidden aria-hidden="true" tabindex="-1"></select></div></div><div class="row viewbar"><div class="row"><div id="viewSwitcher" class="view-switcher" role="toolbar" aria-label="View style"><button type="button" data-mode="compact" aria-label="Image cards" title="Image cards" aria-controls="list" aria-pressed="false"><svg viewBox="0 0 24 26" aria-hidden="true" focusable="false"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg></button><button type="button" data-mode="detailed" aria-label="Detailed cards" title="Detailed cards" aria-controls="list" aria-pressed="false"><svg viewBox="0 0 24 26" aria-hidden="true" focusable="false"><rect x="2" y="2" width="8" height="6" rx="1"/><rect x="14" y="2" width="8" height="6" rx="1"/><path d="M2 11h8m4 0h8"/><rect x="2" y="15" width="8" height="5" rx="1"/><rect x="14" y="15" width="8" height="5" rx="1"/><path d="M2 23h8m4 0h8"/></svg></button><button type="button" data-mode="rows" aria-label="Text rows" title="Text rows" aria-controls="list" aria-pressed="false"><svg viewBox="0 0 24 26" aria-hidden="true" focusable="false"><path d="M8 5h13M8 12h13M8 19h13M3 5h1M3 12h1M3 19h1"/></svg></button></div><select id="mode" hidden aria-hidden="true" tabindex="-1"><option value="compact">Image cards</option><option value="detailed">Detailed cards</option><option value="rows">Text rows</option></select><div class="toolbar-control-pair toolbar-columns"><label for="columns">Columns</label><select id="columns"><option>2</option><option>3</option><option>4</option><option selected>5</option><option>6</option><option>7</option><option>8</option><option>9</option><option>10</option></select></div></div><div class="row"><div class="toolbar-control-pair toolbar-sort"><label for="sort">Sort</label><select id="sort" aria-label="Sort"><option value="original">Original order</option><option value="az">Name A–Z</option><option value="za">Name Z–A</option><option value="progress">Uncollected first</option><option value="vocation">Vocation</option><option value="location">Location</option><option value="character">Character</option><option value="era">Content</option></select></div><div class="toolbar-control-pair toolbar-group"><label for="group">Group</label><select id="group" aria-label="Group"><option value="none">No grouping</option><option value="category">Group: category</option><option value="type">Group: type</option><option value="vocation">Group: vocation</option><option value="character">Group: character</option><option value="era">Group: content</option></select></div></div></div></div><div id="shown" class="results" aria-live="polite"></div><div class="list-scroll" tabindex="0" aria-label="Matching records"><div id="list" class="grid compact"></div><footer>Reference checked 5 November 2026 · Game artwork © CAPCOM · Research confidence applies to individual methods. Unknown does not mean unobtainable. No ads, analytics, accounts, external scripts or online image dependencies.</footer></div></main></div>
 <dialog id="detail" aria-label="Record details"><div class="dialoghead"><div><h2 id="detailTitle"></h2><p id="detailSubtitle"></p></div><button id="closeDetail" aria-label="Close details">Close ✕</button></div><div id="detailBody" class="dialogbody"></div></dialog>
 <dialog id="infoDialog" aria-label="Database information"><div class="dialoghead"><h2 id="infoTitle"></h2><button id="closeInfo">Close ✕</button></div><div id="infoBody" class="dialogbody"></div></dialog><input id="importFile" type="file" accept="application/json,.json" hidden>
 <div id="quantityPopover" class="quantity-popup" popover="auto" role="dialog" aria-label="Item quantity" aria-describedby="quantityTitle"><button id="quantityClose" class="quantity-close" type="button" aria-label="Close quantity editor">×</button><p id="quantityTitle" class="quantity-title"></p><div class="quantity-row"><button id="quantityMinus" class="quantity-step" type="button" aria-label="Decrease quantity">−</button><input id="quantityValue" type="number" min="0" max="999999" step="1" inputmode="numeric" aria-label="Item quantity value"><button id="quantityPlus" class="quantity-step" type="button" aria-label="Increase quantity">+</button></div></div>
@@ -782,12 +791,12 @@ function hasMissable(m){return !unknown(m.missability)&&!/^no\b|not missable|non
 function repeated(m){return /^(?:unlimited|repeatable|farmable)|replenish|restock|can be farmed/i.test(m.repeatability||'')&&!/not verified|unverified|unknown/i.test(m.repeatability||'')}
 function finite(m){return /one(?:-| )time|single|finite|once|one reward|one per/i.test(m.repeatability||'')}
 const LOST_RITES_EQUIPMENT_IDS=new Set(["r:20","weapons-seraphic-spar","weapons-hexfinger","weapons-skygill","weapons-dread-tusk","weapons-peregrine-totem","weapons-calycate-scepter","weapons-talons-of-the-magpie","weapons-iridian-sigils","weapons-blade-of-aldose","weapons-scarbrand","weapons-selenic-cane","weapons-nerodia","weapons-oscine","weapons-kinslayer","weapons-parhelion","weapons-cavicorn-bow","weapons-beckoning-delight","weapons-prickled-pomander","armor-azurequill-circlet","armor-band-of-dunscaith","armor-canopy-of-plenty","armor-crown-of-blades","armor-crown-of-the-mad-sovran","armor-geiroluls-helm","armor-glasrew-galea","armor-glory-laurel","armor-horns-of-moloch","armor-mystic-eye","armor-ophidian-diadem","armor-thorns-of-agony","armor-wyrmhorne-helm","armor-allegoric-plate","armor-catamount-jacket","armor-circumventors-burthen","armor-dragonscoil-harness","armor-eldritch-threnody","armor-kibisis-coat","armor-lex-talionis","armor-plate-of-the-mad-sovran","armor-triumphers-guerdon","armor-wyrmscale-cuirass","armor-archaic-boots","armor-fleetstride-cuisses","armor-greaves-of-the-mad-sovran","armor-insidiators-boots","armor-meteoric-cuisses","armor-padarns-wrap","armor-pyrolytic-cloth","armor-reapers-tread","armor-sanctified-boots","armor-staunch-sabatons","armor-steelsilk-sabatons","armor-wildskirl-breeches","armor-chimeric-cloak","armor-creusots-mantle","armor-crystalline-shawl","armor-dragonslayers-mantle","armor-griffin-feather-cloak","armor-phantasmic-shawl","armor-sovransguard-mantle","armor-tenebrous-stole","armor-celestial-crux","armor-memento-draco","rings-ring-of-imperception","rings-ring-of-exorcism","rings-ring-of-insulation","rings-ring-of-projection"]);
-function matchesContent(x){
- const choices=ui.contentFilters;
+function matchesContent(x,choices=ui.contentFilters){
  return !choices.length||choices.includes(x.sourceTag)
   ||(choices.includes('lost-rites')&&LOST_RITES_EQUIPMENT_IDS.has(x.id));
 }
-function matchRecord(x){const p=spoilerState(x),mm=methods(x),v=(x.vocation||'').split(',').map(s=>s.trim());if(ui.tab!=='All'&&x.category!==ui.tab)return false;if(!matchesContent(x))return false;if(ui.vocation!=='all'&&!maybe(!!x.vocation,v.includes(ui.vocation)||v.some(s=>/^all vocations$/i.test(s))))return false;if(!matchesEquipmentType(x))return false;if(ui.npc!=='all'&&![p.npc,x.questInfo?.giver,...mm.flatMap(m=>[m.npc,m.merchant,m.enemy,m.questGiver])].includes(ui.npc))return false;
+function matchRecord(x){return (ui.tab==='All'||x.category===ui.tab)&&matchesContent(x)&&matchesOtherFilters(x)}
+function matchesOtherFilters(x){const p=spoilerState(x),mm=methods(x),v=(x.vocation||'').split(',').map(s=>s.trim());if(ui.vocation!=='all'&&!maybe(!!x.vocation,v.includes(ui.vocation)||v.some(s=>/^all vocations$/i.test(s))))return false;if(!matchesEquipmentType(x))return false;if(ui.npc!=='all'&&![p.npc,x.questInfo?.giver,...mm.flatMap(m=>[m.npc,m.merchant,m.enemy,m.questGiver])].includes(ui.npc))return false;
 if(ui.collectionProgress.length&&!ui.collectionProgress.includes(progressStatus(x,p)))return false;
 if(ui.method==='unknown'&&mm.length)return false;if(!['all','unknown'].includes(ui.method)&&!maybe(mm.length>0,mm.some(m=>m.type===ui.method)))return false;if(ui.region!=='all'&&!maybe(mm.some(m=>!unknown(m.region)),mm.some(m=>m.region===ui.region)))return false;
 if(ui.method!=='all'&&ui.region!=='all'&&mm.length&&ui.method!=='unknown'&&!mm.some(m=>m.type===ui.method&&(m.region===ui.region||(!m.region&&ui.includeUnknown))))return false;
@@ -1067,18 +1076,20 @@ const checklistStatuses = [
  ['skill-locked', 'Locked']
 ];
 
-function exportChecklist() {
- const categories = new Map(CATS.slice(1).map(category => [category, new Map()]));
- for (const raw of items()) {
-  const entry = spoilerRecord(record(raw));
-  const status = progressStatus(entry, state(raw));
+function downloadChecklist(entries) {
+ const categories = new Map();
+ for (const {entry, progress} of entries) {
+  const status = progressStatus(entry, progress);
+  if (!categories.has(entry.category)) categories.set(entry.category, new Map());
   const groups = categories.get(entry.category);
   if (!groups.has(status)) groups.set(status, []);
   groups.get(status).push(String(entry.name).replace(/\s+/g, ' ').trim());
  }
 
  const lines = ["Dragon's Dogma 2 — Collection checklist"];
- for (const [category, groups] of categories) {
+ for (const category of CATS.slice(1)) {
+  const groups = categories.get(category);
+  if (!groups) continue;
   const total = [...groups.values()].reduce((sum, names) => sum + names.length, 0);
   lines.push('', category + ' (' + total + ')');
   for (const [status, label] of checklistStatuses) {
@@ -1091,7 +1102,83 @@ function exportChecklist() {
  download('DD2_Collection_Checklist.txt', lines.join('\n') + '\n', 'text/plain;charset=utf-8');
 }
 
-$('exportChecklist').onclick = exportChecklist;
+function openChecklistExport() {
+ closeCheckboxFilters();
+ info('Export checklist', root => {
+  const form = el('form', null, 'checklist-export');
+  function checkbox(parent, label, value, checked) {
+   const input = el('input');
+   input.type = 'checkbox';
+   input.value = value;
+   input.checked = checked;
+   const wrapper = el('label');
+   wrapper.append(input, document.createTextNode(label));
+   parent.append(wrapper);
+   return input;
+  }
+  function options(title) {
+   const fieldset = el('fieldset');
+   const choices = el('div', null, 'checklist-export-options');
+   fieldset.append(el('legend', title), choices);
+   form.append(fieldset);
+   return choices;
+  }
+
+  const categories = options('Categories');
+  const allCategories = checkbox(categories, 'All categories', '', ui.tab === 'All');
+  const categoryBoxes = CATS.slice(1).map(category =>
+   checkbox(categories, category, category, ui.tab === 'All' || ui.tab === category));
+  const content = options('Content');
+  const allContent = checkbox(content, 'All content', '', !ui.contentFilters.length);
+  const contentLabels = {base:'Base game', dlc:'Dark Arisen (DLC)', 'lost-rites':'Lost Rites'};
+  const contentBoxes = contentFilter.values.map(value =>
+   checkbox(content, contentLabels[value], value, !ui.contentFilters.length || ui.contentFilters.includes(value)));
+  const keepFilters = checkbox(form, 'Keep other current filters', '', true);
+  const actions = el('div', null, 'checklist-export-actions');
+  const submit = el('button', 'Download checklist', 'primary');
+  submit.type = 'submit';
+  const count = el('span');
+  count.setAttribute('role', 'status');
+  actions.append(submit, count);
+  form.append(actions);
+  root.append(form);
+
+  const catalog = items().map(raw => ({entry:spoilerRecord(record(raw)), progress:state(raw)}));
+  let entries = [];
+  function update() {
+   const selectedCategories = categoryBoxes.filter(input => input.checked).map(input => input.value);
+   const selectedContent = contentBoxes.filter(input => input.checked).map(input => input.value);
+   allCategories.checked = selectedCategories.length === categoryBoxes.length;
+   allCategories.indeterminate = !!selectedCategories.length && !allCategories.checked;
+   allContent.checked = selectedContent.length === contentBoxes.length;
+   allContent.indeterminate = !!selectedContent.length && !allContent.checked;
+   const choices = allContent.checked && (!keepFilters.checked || !ui.contentFilters.length) ? [] : selectedContent;
+   entries = selectedContent.length ? catalog.filter(({entry}) =>
+    selectedCategories.includes(entry.category) && matchesContent(entry, choices)
+    && (!keepFilters.checked || matchesOtherFilters(entry))) : [];
+   count.textContent = entries.length.toLocaleString() + (entries.length === 1 ? ' entry' : ' entries');
+   submit.disabled = !entries.length;
+  }
+  form.onchange = event => {
+   if (event.target === allCategories) {
+    for (const input of categoryBoxes) input.checked = allCategories.checked;
+   }
+   if (event.target === allContent) {
+    for (const input of contentBoxes) input.checked = allContent.checked;
+   }
+   update();
+  };
+  form.onsubmit = event => {
+   event.preventDefault();
+   if (!entries.length) return;
+   downloadChecklist(entries);
+   $('infoDialog').close();
+  };
+  update();
+ });
+}
+
+$('exportChecklist').onclick = openChecklistExport;
 
 $('exportJson').onclick=()=>{download('DD2_Collection_Backup_'+new Date().toISOString().slice(0,10)+'.json',JSON.stringify(backup(),null,2),'application/json');toast('Progress backup downloaded.')};$('importTrigger').onclick=()=>$('importFile').click();$('importFile').onchange=async e=>{const f=e.target.files?.[0];e.target.value='';if(!f)return;try{if(f.size>20e6)throw Error('Backup exceeds 20 MB');importBackup(JSON.parse(await f.text()))}catch(e){toast(spoilersHidden()&&!e.safeImportNotice?'Could not import. Check the backup format or browser storage; keep your backup file.':'Could not import: '+e.message,true)}};
 $('exportCsv').onclick=()=>{let rows=[['ID','Category','Name','Type','Vocation','NPC','Personal location','Obtained','Quantity','Completed','Content','Notes','Acquisitions','Evidence']];for(const raw of items()){const x=record(raw),p=state(raw);rows.push([x.id,x.category,x.name,x.type,x.vocation,p.npc,p.location,p.obtained,physical(x)?p.quantity:'',p.completed,x.source,p.notes,methods(x).map(m=>[m.type,m.merchant,m.quest,m.location,m.description].filter(Boolean).join(' | ')).join(' || '),methods(x).map(m=>m.confidence).join('; ')])}const cell=v=>'"'+String(v??'').replace(/^[=+@\-]/,"'$&").replace(/"/g,'""')+'"';download('DD2_Collection.csv','\uFEFF'+rows.map(r=>r.map(cell).join(',')).join('\r\n'),'text/csv;charset=utf-8')};
