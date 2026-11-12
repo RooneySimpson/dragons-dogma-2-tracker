@@ -131,7 +131,9 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .alphabet-group{flex:none;text-align:center;font-size:9px;line-height:1.2;color:var(--muted);max-height:34px;overflow:hidden;overflow-wrap:anywhere}
 .alphabet-letters{position:relative;display:grid;flex:1;min-height:0;grid-auto-flow:column;grid-template-rows:repeat(var(--alphabet-rows,27),minmax(18px,1fr));grid-template-columns:repeat(var(--alphabet-columns,1),minmax(0,1fr));overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;overscroll-behavior:contain;gap:1px}
 .alphabet-letter{border:0;background:transparent;color:var(--text);font-size:11px;font-weight:600;line-height:1;padding:2px 0;min-height:18px;width:100%;border-radius:4px;text-align:center}
-.alphabet-letter:disabled{color:#a3aaa5;opacity:1;cursor:default;padding-right:6px}
+.alphabet-letter:disabled{color:#a3aaa5;opacity:1;cursor:default}
+.alphabet-letter:enabled{position:relative;padding-left:6px}
+.alphabet-letter:enabled::before{content:"";position:absolute;left:2px;top:50%;width:4px;height:1px;background:currentColor;transform:translateY(-50%)}
 .alphabet-letter[aria-current]{background:var(--gold);color:#162119}
 .alphabet-letter:not(:disabled):hover{background:#3c503c;color:var(--text)}
 .alphabet-letter:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
