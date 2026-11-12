@@ -128,7 +128,8 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .list-region>.list-scroll{min-width:0;flex:1}
 .alphabet-index{display:flex;flex:0 0 calc(var(--alphabet-columns,1) * 21px + 11px);min-height:0;flex-direction:column;align-self:stretch;border-left:1px solid var(--border);padding-left:5px;gap:4px}
 .alphabet-current{flex:none;text-align:center;font:700 23px Georgia,serif;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border)}
-.alphabet-group{flex:none;text-align:center;font-size:9px;line-height:1.2;color:var(--muted);max-height:34px;overflow:hidden;overflow-wrap:anywhere}
+.alphabet-group{flex:none;block-size:2.4em;text-align:center;font-size:9px;line-height:1.2;color:var(--muted);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
+.alphabet-group[hidden]{display:none}
 .alphabet-letters{position:relative;display:grid;flex:1;min-height:0;grid-auto-flow:column;grid-template-rows:repeat(var(--alphabet-rows,27),minmax(18px,1fr));grid-template-columns:repeat(var(--alphabet-columns,1),minmax(0,1fr));overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;overscroll-behavior:contain;gap:1px}
 .alphabet-letter{border:0;background:transparent;color:var(--text);font-size:11px;font-weight:600;line-height:1;padding:2px 0;min-height:18px;width:100%;border-radius:4px;text-align:center}
 .alphabet-letter:disabled{color:#a3aaa5;opacity:1;cursor:default}
@@ -851,6 +852,7 @@ function syncAlphabetIndex(records,advanceSelection){
   syncAlphabetHighlight();
   return;
  }
+ $('alphabetGroup').hidden=ui.group==='none';
  const nodes=[...$('list').children].filter(node=>node.matches('article.card'));
  alphabetEntries=records.map((record,i)=>{const letter=indexLetter(alphabeticalName(record)),group=ui.group==='none'?'':String(groupVal(record));nodes[i].dataset.indexLetter=letter;return {node:nodes[i],letter,group,category:record.category}});
  if(selectedAlphabetLetter&&!alphabetEntries.some(entry=>entry.letter===selectedAlphabetLetter)){
@@ -880,7 +882,7 @@ function updateAlphabetPosition(){
  if(scroll.scrollHeight>scroll.clientHeight+1&&scroll.scrollTop+scroll.clientHeight>=scroll.scrollHeight-2)index=alphabetEntries.length-1;
  const entry=alphabetEntries[index];alphabetGroup=entry.group;
  $('alphabetCurrent').textContent=entry.letter;$('alphabetCurrent').title='Current letter: '+entry.letter+(entry.category==='Rings'?' (ignoring Ring of)':'');
- $('alphabetGroup').textContent=entry.group;$('alphabetGroup').hidden=!entry.group;$('alphabetGroup').title=entry.group?'Index within '+entry.group:'';
+ $('alphabetGroup').textContent=entry.group;$('alphabetGroup').title=entry.group?'Index within '+entry.group:'';
  const available=new Set(alphabetEntries.filter(x=>x.group===entry.group).map(x=>x.letter));
  rail.setAttribute('aria-label',entry.group?'Alphabetical navigation within '+entry.group:'Alphabetical list navigation');
  for(const button of $('alphabetLetters').children){
