@@ -1012,11 +1012,16 @@ function appendResults(records) {
  }
  const displayed = [];
  for (const [name, entries] of groups) {
+  const finished = entries.filter(entry => {
+   const progress = state(entry);
+   return entry.category === 'Quests' ? progress.completed : progress.obtained;
+  }).length;
   const heading = el('div', null, 'groupheading');
   heading.setAttribute('role', 'heading');
   heading.setAttribute('aria-level', '2');
-  heading.append(el('span', name, 'group-name'),
-   el('span', ' (' + entries.length.toLocaleString() + ')', 'group-count'));
+  const count = el('span', ' (' + finished.toLocaleString() + '/' + entries.length.toLocaleString() + ')', 'group-count');
+  count.title = 'Collected equipment, unlocked skills or completed quests out of displayed entries';
+  heading.append(el('span', name, 'group-name'), count);
   list.append(heading);
   for (const record of entries) {
    list.append(renderEntry(record));
