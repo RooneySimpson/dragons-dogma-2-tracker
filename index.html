@@ -135,6 +135,7 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .alphabet-letter[aria-current]{background:var(--gold);color:#162119}
 .alphabet-letter:not(:disabled):hover{background:#3c503c;color:var(--text)}
 .alphabet-letter:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
+#list article.alphabet-match,.alphabet-letter[aria-pressed=true]{outline:2px solid #f4ca72;outline-offset:-2px}
 @media(max-width:620px){.list-region{gap:4px}.alphabet-index{padding-left:3px}.alphabet-current{font-size:21px}}
 
 </style><style id="trackerSourcesStyles">
@@ -699,8 +700,9 @@ const name=el('strong',x.name,'row-name');name.title=x.name;const meta=el('span'
 const labels={strength:'STR',magick:'MAG',defense:'DEF',magickDefense:'MDEF',weight:'kg'};const stats=el('span',Object.entries(labels).filter(([k])=>x[k]!==undefined).map(([k,label])=>k==='weight'?x[k]+' kg':label+' '+x[k]).join(' · ')||x.effect||x.prerequisite||'—','row-stats');stats.title=stats.textContent;
 const mm=methods(x),summary=el('span',x.category==='Quests'?(x.questInfo?.objectives||'Objectives not documented'):mm.length?mm.map(m=>[m.merchant||m.enemy||m.quest||m.type,m.location,m.description].filter(Boolean).join(' · ')).join(' | '):x.questInfo?.objectives||'No sourced acquisition yet','row-acquisition');summary.title=summary.textContent;
 if(x.category==='Quests'){const identity=el('span',null,'quest-identity');identity.append(name,meta);op.append(identity,summary)}else op.append(name,meta,voc,stats,summary);const checks=el('div',null,'checks'+(physical(x)?' equipment-checks':''));checks.append(box(x,'obtained'));if(x.category==='Quests')checks.append(box(x,'completed'));if(physical(x))checks.append(quantityButton(x));c.append(checks,op);return finishSpoilerCard(c,x)}
-// Navigation only: catalog order, grouping, progress and storage stay unchanged.
+// Keep the chosen letter independent of the scroll position.
 let alphabetEntries=[],alphabetPositions=[],alphabetFrame=0,alphabetMeasureFrame=0,alphabetGroup=null;
+let selectedAlphabetLetter=null;
 const ALPHABET='#ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split('');
 function indexLetter(name){const first=String(name||'').normalize('NFKD').replace(/[\u0300-\u036f]/g,'').trim().replace(/^[^\p{L}\p{N}]+/u,'').charAt(0).toUpperCase();return /^[A-Z]$/.test(first)?first:'#'}
 function initializeAlphabetIndex(){
@@ -709,8 +711,10 @@ function initializeAlphabetIndex(){
  const current=el('div',null,'alphabet-current');current.id='alphabetCurrent';current.setAttribute('aria-label','Current letter');
  const group=el('div',null,'alphabet-group');group.id='alphabetGroup';
  const letters=el('div',null,'alphabet-letters');letters.id='alphabetLetters';
- for(const letter of ALPHABET){const button=el('button',letter,'alphabet-letter');button.type='button';button.dataset.letter=letter;button.setAttribute('aria-label','Jump to '+(letter==='#'?'numbers and other names':letter));button.setAttribute('aria-controls','list');button.onclick=()=>{
+ for(const letter of ALPHABET){const button=el('button',letter,'alphabet-letter');button.type='button';button.dataset.letter=letter;button.setAttribute('aria-label','Jump to '+(letter==='#'?'numbers and other names':letter));button.setAttribute('aria-controls','list');button.setAttribute('aria-pressed','false');button.onclick=()=>{
    const entry=alphabetEntries.find(x=>x.group===alphabetGroup&&x.letter===letter);if(!entry)return;
+   selectedAlphabetLetter=letter;
+   syncAlphabetHighlight();
    const top=entry.node.getBoundingClientRect().top-scroll.getBoundingClientRect().top+scroll.scrollTop-scroll.clientTop;
    scroll.scrollTo({top:Math.max(0,top),behavior:'instant'});updateAlphabetPosition();
  };letters.append(button)}
@@ -718,12 +722,21 @@ function initializeAlphabetIndex(){
  scroll.addEventListener('scroll',()=>{if(alphabetFrame)return;alphabetFrame=requestAnimationFrame(()=>{alphabetFrame=0;updateAlphabetPosition()})},{passive:true});
  new ResizeObserver(scheduleAlphabetMeasurements).observe(scroll);
 }
+function syncAlphabetHighlight(){
+ for(const {node,letter} of alphabetEntries)node.classList.toggle('alphabet-match',letter===selectedAlphabetLetter);
+ for(const button of $('alphabetLetters').children)button.setAttribute('aria-pressed',String(button.dataset.letter===selectedAlphabetLetter));
+}
 function syncAlphabetIndex(records){
  const rail=$('alphabetIndex');rail.hidden=ui.sort!=='az'||!records.length;
  alphabetEntries=[];alphabetPositions=[];alphabetGroup=null;
+ if(ui.sort!=='az'&&selectedAlphabetLetter!==null){
+  selectedAlphabetLetter=null;
+  syncAlphabetHighlight();
+ }
  if(rail.hidden)return;
  const nodes=[...$('list').children].filter(node=>node.matches('article.card'));
  alphabetEntries=records.map((record,i)=>{const letter=indexLetter(alphabeticalName(record)),group=ui.group==='none'?'':String(groupVal(record));nodes[i].dataset.indexLetter=letter;return {node:nodes[i],letter,group,category:record.category}});
+ syncAlphabetHighlight();
  scheduleAlphabetMeasurements();
 }
 function scheduleAlphabetMeasurements(){
