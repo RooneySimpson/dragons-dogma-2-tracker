@@ -271,6 +271,9 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .checkbox-filter-menu label{display:flex;align-items:center;gap:7px;padding:4px;cursor:pointer}
 .checkbox-filter-menu input{margin:0;accent-color:#8fbe91}
 </style>
+<style id="resultGroupStyles">
+.group-count{color:var(--muted);font-size:.82em;white-space:nowrap;font-variant-numeric:tabular-nums}
+</style>
 </head><body>
 <!-- DD2-HUB v1: collection 3.4 + fruit counter 6 -->
 <nav id="dd2HubNav" aria-label="Playthrough tools">
@@ -973,7 +976,36 @@ function syncViewSwitcher(){
  $('columns').closest('.toolbar-columns').classList.toggle('card-controls-disabled',ui.mode==='rows');
 }
 
-function draw(advanceAlphabet=false){cancelProgressExits();resetCardVocations();sanitizeSpoilerView(ui);const a=filtered();$('shown').textContent=a.length.toLocaleString()+' results';$('list').replaceChildren();let last=null;for(const x of a){const g=groupVal(x);if(ui.group!=='none'&&g!==last){last=g;$('list').append(el('div',g,'groupheading'))}$('list').append(ui.mode==='rows'?textRow(x):card(x))}if(!a.length)$('list').append(el('div','No matches. Clear filters or include unknown metadata to see records with research gaps.','empty'));applyView();syncAlphabetIndex(a,advanceAlphabet);saveView()}
+function appendResults(records) {
+ const list = $('list');
+ const renderEntry = ui.mode === 'rows' ? textRow : card;
+ if (ui.group === 'none') {
+  for (const record of records) list.append(renderEntry(record));
+  return records;
+ }
+ const groups = new Map();
+ for (const record of records) {
+  const name = groupVal(record);
+  if (!groups.has(name)) groups.set(name, []);
+  groups.get(name).push(record);
+ }
+ const displayed = [];
+ for (const [name, entries] of groups) {
+  const heading = el('div', null, 'groupheading');
+  heading.setAttribute('role', 'heading');
+  heading.setAttribute('aria-level', '2');
+  heading.append(el('span', name, 'group-name'),
+   el('span', ' (' + entries.length.toLocaleString() + ')', 'group-count'));
+  list.append(heading);
+  for (const record of entries) {
+   list.append(renderEntry(record));
+   displayed.push(record);
+  }
+ }
+ return displayed;
+}
+
+function draw(advanceAlphabet=false){cancelProgressExits();resetCardVocations();sanitizeSpoilerView(ui);const a=filtered();$('shown').textContent=a.length.toLocaleString()+' results';$('list').replaceChildren();const displayed=appendResults(a);if(!a.length)$('list').append(el('div','No matches. Clear filters or include unknown metadata to see records with research gaps.','empty'));applyView();syncAlphabetIndex(displayed,advanceAlphabet);saveView()}
 function render(advanceAlphabet=false){updateTypeOptions();const a=items();$('statTotal').textContent=a.length.toLocaleString();$('statOwned').textContent=a.filter(x=>state(x).obtained).length;$('statQuests').textContent=a.filter(x=>x.category==='Quests'&&state(x).completed).length+' / '+a.filter(x=>x.category==='Quests').length;$('statMethods').textContent=COVER.totals.sourcedAcquisition.count;$('statImages').textContent=COVER.totals.images.count;$('undoRun').hidden=!store.runHistory?.length;$('tabs').replaceChildren();for(const cat of CATS){const b=el('button',cat,'tab');b.setAttribute('role','tab');b.setAttribute('aria-selected',String(ui.tab===cat));b.append(el('span',cat==='All'?a.length:a.filter(x=>x.category===cat).length,'count'));b.onclick=()=>{ui.tab=cat;render()};$('tabs').append(b)}draw(advanceAlphabet)}
 function applyView(){scheduleAlphabetMeasurements();const width=$('list').clientWidth,eff=ui.columns;document.documentElement.style.setProperty('--columns',eff);$('list').className='grid '+ui.mode+(ui.mode==='rows'&&(ui.tab==='Quests'||($('list').querySelector('.quest-row')&&!$('list').querySelector('article.card:not(.quest-row)')))?' quest-results':'');syncViewSwitcher();$('columns').disabled=ui.mode==='rows';const cardWidth=Math.max(1,(width-10*(eff-1))/eff);document.documentElement.style.setProperty('--image-height',Math.round(cardWidth*1.08)+'px');syncVocationTrigger()}
 function heading(t,root){root.append(el('h3',t,'section'))}
