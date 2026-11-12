@@ -130,7 +130,7 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .alphabet-current{flex:none;text-align:center;font:700 23px Georgia,serif;color:var(--muted);padding:3px 0;border-bottom:1px solid var(--border)}
 .alphabet-group{flex:none;block-size:2.4em;text-align:center;font-size:9px;line-height:1.2;color:var(--muted);display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;overflow-wrap:anywhere}
 .alphabet-group[hidden]{display:none}
-.alphabet-letters{position:relative;display:grid;flex:1;min-height:0;grid-auto-flow:column;grid-template-rows:repeat(var(--alphabet-rows,27),minmax(18px,1fr));grid-template-columns:repeat(var(--alphabet-columns,1),minmax(0,1fr));overflow-y:auto;overflow-x:hidden;scrollbar-width:thin;overscroll-behavior:contain;gap:1px}
+.alphabet-letters{position:relative;display:grid;flex:1;min-height:0;grid-auto-flow:column;grid-template-rows:repeat(var(--alphabet-rows,27),minmax(18px,1fr));grid-template-columns:repeat(var(--alphabet-columns,1),minmax(0,1fr));overflow:clip;gap:1px}
 .alphabet-letter{border:0;background:transparent;color:var(--text);font-size:11px;font-weight:600;line-height:1;padding:2px 0;min-height:18px;width:100%;border-radius:4px;text-align:center}
 .alphabet-letter:disabled{color:#a3aaa5;opacity:1;cursor:default}
 .alphabet-letter:enabled{position:relative;padding-left:6px}
@@ -139,7 +139,16 @@ html,body{height:100%;overflow:hidden}body{display:flex;flex-direction:column}he
 .alphabet-letter:not(:disabled):not([aria-pressed=true]):hover{background:#3c503c;color:var(--text)}
 .alphabet-letter:focus-visible{outline:2px solid var(--gold);outline-offset:-2px}
 #list article.alphabet-match{outline:2px solid #f4ca72;outline-offset:-2px}
+.list-region.alphabet-inline{flex-direction:column}
+.alphabet-inline>.alphabet-index{order:-1;flex:none;border-left:0;padding:0 0 4px;border-bottom:1px solid var(--border)}
+.alphabet-inline .alphabet-current,.alphabet-inline .alphabet-group{display:none}
+.alphabet-inline .alphabet-letters{flex:none;grid-auto-flow:row;block-size:calc(var(--alphabet-rows,1) * 19px)}
 @media(max-width:620px){.list-region{gap:4px}.alphabet-index{padding-left:3px}.alphabet-current{font-size:21px}}
+@media(max-width:620px){
+ #dd2CollectionPanel .layout:has(.alphabet-inline){overflow-y:auto}
+ #dd2CollectionPanel main:has(.alphabet-inline){flex:1 0 auto}
+ .list-region.alphabet-inline{flex-basis:120px;min-height:120px}
+}
 
 </style><style id="trackerSourcesStyles">
 #dd2CollectionPanel .toolbar #trackerSources{font-size:11px;padding:5px 8px;background:transparent;color:var(--muted)}
@@ -819,7 +828,9 @@ function initializeAlphabetIndex(){
  };letters.append(button)}
  rail.append(current,group,letters);
  scroll.addEventListener('scroll',()=>{if(alphabetFrame)return;alphabetFrame=requestAnimationFrame(()=>{alphabetFrame=0;updateAlphabetPosition()})},{passive:true});
- new ResizeObserver(scheduleAlphabetMeasurements).observe(scroll);
+ const resizeObserver=new ResizeObserver(scheduleAlphabetMeasurements);
+ resizeObserver.observe(region);
+ resizeObserver.observe(scroll);
 }
 function jumpToAlphabetEntry(entry){
  const scroll=$('list').parentElement;
@@ -848,6 +859,7 @@ function syncAlphabetIndex(records,advanceSelection){
  const previousGroup=alphabetGroup;
  alphabetEntries=[];alphabetPositions=[];alphabetGroup=null;
  if(rail.hidden){
+  rail.parentElement.classList.remove('alphabet-inline');
   selectedAlphabetLetter=null;
   syncAlphabetHighlight();
   return;
@@ -865,9 +877,18 @@ function syncAlphabetIndex(records,advanceSelection){
 }
 function scheduleAlphabetMeasurements(){
  if(alphabetMeasureFrame)return;
- alphabetMeasureFrame=requestAnimationFrame(()=>{alphabetMeasureFrame=0;if(!$('alphabetIndex')||$('alphabetIndex').hidden||!alphabetEntries.length)return;
-  const letters=$('alphabetLetters'),columns=Math.min(5,Math.ceil(ALPHABET.length/Math.max(1,Math.floor((letters.clientHeight+1)/19))));
-  $('alphabetIndex').style.setProperty('--alphabet-columns',columns);$('alphabetIndex').style.setProperty('--alphabet-rows',Math.ceil(ALPHABET.length/columns));
+ alphabetMeasureFrame=requestAnimationFrame(()=>{alphabetMeasureFrame=0;
+  const rail=$('alphabetIndex');
+  if(!rail||rail.hidden||!alphabetEntries.length)return;
+  const letters=$('alphabetLetters'),region=rail.parentElement;
+  // A side rail needs six rows plus room for its letter and optional group label.
+  const inline=region.clientHeight<($('alphabetGroup').hidden?155:181);
+  region.classList.toggle('alphabet-inline',inline);
+  const columns=inline
+   ? Math.max(1,Math.min(ALPHABET.length,Math.floor((letters.clientWidth+1)/21)))
+   : Math.ceil(ALPHABET.length/Math.max(1,Math.floor((letters.clientHeight+1)/19)));
+  rail.style.setProperty('--alphabet-columns',columns);
+  rail.style.setProperty('--alphabet-rows',Math.ceil(ALPHABET.length/columns));
   const scroll=$('list').parentElement,origin=scroll.getBoundingClientRect().top+scroll.clientTop;
   alphabetPositions=alphabetEntries.map(entry=>entry.node.getBoundingClientRect().top-origin+scroll.scrollTop);
   updateAlphabetPosition();
@@ -891,8 +912,6 @@ function updateAlphabetPosition(){
   button.title=selected?'Clear '+letter+' highlight':(button.disabled?'No names starting with ':'Jump to ')+letter+(entry.group?' in '+entry.group:'');
   if(letter===entry.letter)button.setAttribute('aria-current','location');else button.removeAttribute('aria-current');
  }
- const letters=$('alphabetLetters'),active=letters.querySelector('[aria-pressed=true]')||letters.querySelector('[aria-current]');
- if(active){const start=active.offsetTop,end=start+active.offsetHeight;if(start<letters.scrollTop)letters.scrollTop=start;else if(end>letters.scrollTop+letters.clientHeight)letters.scrollTop=end-letters.clientHeight}
 }
 
 // Use only the embedded catalog, never browser progress, notes or custom records.
